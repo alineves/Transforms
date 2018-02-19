@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 
 fs, audData = wv.open_wave("./waves/f0001038.wav")
 
-
 #audData = np.array([1, 2, 3, 4, 1, 2, 3, 4])
 #fs = 400
 
