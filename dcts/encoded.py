@@ -6,10 +6,12 @@ class WaveEncoded:
     tamanhoQuadro = 0
     qtdDescartes = 0
     qtQuadros = 0
+    totalAmostras = 0
 
-    def __init__(self, encodedData, tamanhoQuadro):
+    def __init__(self, encodedData, tamanhoQuadro, totalAmostras):
         self.encodedData = encodedData
         self.tamanhoQuadro = tamanhoQuadro
+        self.totalAmostras = totalAmostras
         self.qtdDescartes = 0
         self.qtQuadros = math.ceil(len(encodedData) / tamanhoQuadro)
     
