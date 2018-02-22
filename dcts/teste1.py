@@ -13,10 +13,9 @@ encoded = wv.encodeDct1(audData, fs, 0.02)
 print("ENCODED: ", encoded)
 print("ENCODED: ", len(encoded))
 
-#wv.descartar(encoded, fs, 0.02, 220)
+# wv.descartar(encoded, fs, 0.02, 160)
 
 decoded = np.resize(wv.decodeDct1(encoded, fs, 0.02), len(audData))
-#print("DECODED: ", desnormalize(decoded).astype('int16'))
 print("DECODED: ", decoded)
 print("DECODED: ", len(decoded))
 

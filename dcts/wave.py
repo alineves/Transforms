@@ -87,18 +87,18 @@ def codec(dados, fs, tempoQuadro, funcCalc, funcBase):
     for i in range(0, totalAmostras, amostrasPorQuadro):
         quadro = _extrairQuadro(dados, i, amostrasPorQuadro)
         result = funcCalc(quadro, base)
-        ret = np.append(ret, result)
+        ret = np.append(ret, result[0: amostrasPorQuadro])
     return ret
 
-def descartar(encoded, fs, tempoQuadro, quantidadeDescartes):
-    amostrasPorQuadro = int(fs * tempoQuadro)
-    totalAmostras = len(encoded)
+#def descartar(encoded, fs, tempoQuadro, quantidadeDescartes):
+#    amostrasPorQuadro = int(fs * tempoQuadro)
+#    totalAmostras = len(encoded)
 
-    zeros = np.zeros(quantidadeDescartes)
-    for i in range(0, totalAmostras, amostrasPorQuadro):
-        utimo = i + amostrasPorQuadro
-        inicioDescarte = (utimo - quantidadeDescartes)
-        encoded[inicioDescarte:utimo] = zeros
+#    zeros = np.zeros(quantidadeDescartes)
+#    for i in range(0, totalAmostras, amostrasPorQuadro):
+#        utimo = i + amostrasPorQuadro
+#        inicioDescarte = (utimo - quantidadeDescartes)
+#        encoded[inicioDescarte:utimo] = zeros
    
 def _extrairQuadro(audioData, inicio, amostrasPorQuadro):
     quadro = audioData[inicio: inicio + amostrasPorQuadro]
