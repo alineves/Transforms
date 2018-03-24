@@ -1,7 +1,6 @@
 from scipy.fftpack import dct
 from scipy.io.wavfile import read, write
 import numpy as np
-# import matplotlib.pyplot as plt
 import math
 
 def open_wave(filename):
@@ -11,20 +10,23 @@ def open_wave(filename):
 def save_wave(filename, rate, data, br):
     write(filename, rate, desnormalize(data, br))
 
-def normalize(audData):
-    if audData.dtype == 'int16':
-        nb_bits = 16 # -> 16-bit wav files
-    elif audData.dtype == 'int32':
-        nb_bits = 32 # -> 32-bit wav files
-    max_nb_bit = float(2 ** (nb_bits - 1))
-    samples = audData / (max_nb_bit)
-    return samples
+def normalizer(dtype):
+    nb_bits = 8
+    if  dtype == 'int16':
+        nb_bits = 16
+    elif dtype == 'int32':
+        nb_bits = 32
 
-def desnormalize(audData, br):
-    dt = np.rint(audData * (2 ** (br -1)))
-    if br == 16:
-        return dt.astype('int16')
-    return dt.astype('int32')
+    return 2 ** (nb_bits - 1)
+
+def normalize(audData):
+    max_nb_bit = float(normalizer(audData.dtype))
+    return audData / max_nb_bit
+
+def desnormalize(audData, bits):
+    dtype = 'int' + str(bits)
+    dt = np.rint(audData * normalizer(dtype))
+    return dt.astype(dtype)
 
 
 def calculaBaseDct1(amostrasPorQuadro):

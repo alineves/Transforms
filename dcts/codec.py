@@ -1,5 +1,5 @@
 import numpy as np
-import dcts.encoded as encoded
+import dcts.encoded as enc
 
 def codec(dados, amostrasPorQuadro, funcCalc, funcBase):
     totalAmostras = len(dados)
@@ -22,10 +22,16 @@ def _extrairQuadro(audioData, inicio, amostrasPorQuadro):
 def encode(audioData, fs, tempoQuadro, alg):
     tamanhoQuadro = calculaTempoQuadro(fs, tempoQuadro)
     encData = codec(audioData, tamanhoQuadro, alg.encode, alg.calculaBase)
-    return encoded.WaveEncoded(encData, tamanhoQuadro, len(audioData))
+    return enc.WaveEncoded(encData, tamanhoQuadro, len(audioData))
 
 def decode(encoded, fs, tempoQuadro, alg):
     return codec(encoded, calculaTempoQuadro(fs, tempoQuadro), alg.decode, alg.calculaBase)
+
+def decodeFromEncoded(encoded, fs, tempoQuadro, alg):
+    novoEncoded = enc.WaveEncoded.loadFromEncoded(encoded)
+    result = codec(novoEncoded.getDados(), calculaTempoQuadro(fs, tempoQuadro), alg.decode, alg.calculaBase)
+    toRemove = (encoded.totalAmostras - len(result))
+    return result[:toRemove]
 
 def calculaTempoQuadro(fs, tempoQuadro):
     return int(fs * tempoQuadro)

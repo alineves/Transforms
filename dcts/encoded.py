@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import numpy as np
 import struct
 import dcts.wave as wave
 
@@ -40,7 +41,9 @@ class WaveEncoded:
     
     def getDados(self):
         return self.encodedData
-    
+    def getTotalAmostras(self):
+        return self.totalAmostras
+
     def getDadosComprimidos(self):
         ret = np.zeros(self.qtQuadros * (self.tamanhoQuadro - self.qtdDescartes))
         for i in range(0, self.qtQuadros):
@@ -53,13 +56,16 @@ class WaveEncoded:
         return ret
 
     def _writeHeader(self, writter):
-        writter.write(struct.pack('>III',  self.totalAmostras, self.tamanhoQuadro, self.qtdDescartes))
+        writter.write(struct.pack('>III',  self.totalAmostras,
+         self.tamanhoQuadro, self.qtdDescartes))
 
     def _writeData(self, writter):
-        desn = wave.desnormalize(self.getDadosComprimidos(), 16)
-        writter.write(struct.pack('>I', len(desn)))
-        toWrite = desn.ravel().view('b').data
-        writter.write(toWrite)
+        desn = self.getDadosComprimidos()
+        max = desn.max()
+        writter.write(struct.pack('d', max))
+        norm = _normalize(desn, max, 'int16')
+        for i in range(0, len(norm)):
+            writter.write(struct.pack('>h', norm[i]))
 
     def saveToFile(self, filename):
         with open(filename, 'wb') as f:
@@ -72,21 +78,34 @@ class WaveEncoded:
             (totalAmostras, tamanhoQuadro, qtdDescartes) = _readHeader(r)
             encodedData = _readData(r)
             return WaveEncoded.comAmostrasDescartadas(encodedData, tamanhoQuadro, totalAmostras, qtdDescartes)
+    
+    @classmethod
+    def loadFromEncoded(cls, encoded):
+        return WaveEncoded.comAmostrasDescartadas(encoded.getDadosComprimidos(),
+            encoded.tamanhoQuadro, encoded.totalAmostras, encoded.qtdDescartes)
 
-def _readShapeSize(reader):
-    size = struct.calcsize('>I')
+def _readMax(reader):
+    size = struct.calcsize('d')
     buff = reader.read(size)
-    return struct.unpack('>I', buff)
+    return struct.unpack('d', buff)
 
 def _readData(reader):
-    size = _readShapeSize(reader)[0]
-    start = reader.tell()
-    data = np.memmap(reader, dtype='int16', mode='c', offset=start, shape=(size,))
-    return wave.normalize(data)
+    max = _readMax(reader)
+    buff = reader.read()
+    isize = struct.calcsize('>h')
+    size = len(buff) // isize
+    ret = np.empty(size)
+    for i in range(0, size):
+        val = struct.unpack_from('>h', buff, offset=(i * isize))[0]
+        ret[i] = val
+    return ret / wave.normalizer('int16') * max
 
 def _readHeader(reader):
     size = struct.calcsize('>III')
     buff = reader.read(size)
     (totalAmostras, tamanhoQuadro, qtdDescartes) = struct.unpack('>III', buff)
     return (totalAmostras, tamanhoQuadro, qtdDescartes)
+
+def _normalize(array, max, tp):
+    return ((array / max) * wave.normalizer(tp)).astype(tp)
     
