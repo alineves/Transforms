@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import struct
+import dcts.wave as wave
 
 class WaveEncoded:
     encodedData = []
@@ -49,3 +51,42 @@ class WaveEncoded:
             retEnd = retInit + self.tamanhoQuadro - self.qtdDescartes
             ret[retInit : retEnd] = self.encodedData[init : end]
         return ret
+
+    def _writeHeader(self, writter):
+        writter.write(struct.pack('>III',  self.totalAmostras, self.tamanhoQuadro, self.qtdDescartes))
+
+    def _writeData(self, writter):
+        desn = wave.desnormalize(self.getDadosComprimidos(), 16)
+        writter.write(struct.pack('>I', len(desn)))
+        toWrite = desn.ravel().view('b').data
+        writter.write(toWrite)
+
+    def saveToFile(self, filename):
+        with open(filename, 'wb') as f:
+            self._writeHeader(f)
+            self._writeData(f)
+
+    @classmethod
+    def loadFromFile(cls, filename):
+        with open(filename, 'rb') as r:
+            (totalAmostras, tamanhoQuadro, qtdDescartes) = _readHeader(r)
+            encodedData = _readData(r)
+            return WaveEncoded.comAmostrasDescartadas(encodedData, tamanhoQuadro, totalAmostras, qtdDescartes)
+
+def _readShapeSize(reader):
+    size = struct.calcsize('>I')
+    buff = reader.read(size)
+    return struct.unpack('>I', buff)
+
+def _readData(reader):
+    size = _readShapeSize(reader)[0]
+    start = reader.tell()
+    data = np.memmap(reader, dtype='int16', mode='c', offset=start, shape=(size,))
+    return wave.normalize(data)
+
+def _readHeader(reader):
+    size = struct.calcsize('>III')
+    buff = reader.read(size)
+    (totalAmostras, tamanhoQuadro, qtdDescartes) = struct.unpack('>III', buff)
+    return (totalAmostras, tamanhoQuadro, qtdDescartes)
+    

@@ -1,15 +1,15 @@
 from scipy.fftpack import dct
 from scipy.io.wavfile import read, write
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import math
 
 def open_wave(filename):
     rate, audData = read(filename)
     return rate, normalize(audData)
 
-def save_wave(filename, rate, data):
-    write(filename, rate, data)
+def save_wave(filename, rate, data, br):
+    write(filename, rate, desnormalize(data, br))
 
 def normalize(audData):
     if audData.dtype == 'int16':
@@ -20,8 +20,12 @@ def normalize(audData):
     samples = audData / (max_nb_bit)
     return samples
 
-def desnormalize(audData):
-    return audData * (2 ** 15)
+def desnormalize(audData, br):
+    dt = np.rint(audData * (2 ** (br -1)))
+    if br == 16:
+        return dt.astype('int16')
+    return dt.astype('int32')
+
 
 def calculaBaseDct1(amostrasPorQuadro):
     base1 = np.zeros((amostrasPorQuadro, amostrasPorQuadro))
@@ -89,16 +93,6 @@ def codec(dados, fs, tempoQuadro, funcCalc, funcBase):
         result = funcCalc(quadro, base)
         ret = np.append(ret, result[0: amostrasPorQuadro])
     return ret
-
-#def descartar(encoded, fs, tempoQuadro, quantidadeDescartes):
-#    amostrasPorQuadro = int(fs * tempoQuadro)
-#    totalAmostras = len(encoded)
-
-#    zeros = np.zeros(quantidadeDescartes)
-#    for i in range(0, totalAmostras, amostrasPorQuadro):
-#        utimo = i + amostrasPorQuadro
-#        inicioDescarte = (utimo - quantidadeDescartes)
-#        encoded[inicioDescarte:utimo] = zeros
    
 def _extrairQuadro(audioData, inicio, amostrasPorQuadro):
     quadro = audioData[inicio: inicio + amostrasPorQuadro]
