@@ -36,10 +36,10 @@ class WaveEncoded:
     def descartar(self, qtdDescartes):
         self.qtdDescartes = qtdDescartes
     
-    def getEncodedData(self):
+    def getDados(self):
         return self.encodedData
     
-    def getData(self):
+    def getDadosComprimidos(self):
         ret = np.zeros(self.qtQuadros * (self.tamanhoQuadro - self.qtdDescartes))
         for i in range(0, self.qtQuadros):
             init = i * self.tamanhoQuadro
