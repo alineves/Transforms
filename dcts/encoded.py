@@ -13,10 +13,31 @@ class WaveEncoded:
         self.tamanhoQuadro = tamanhoQuadro
         self.totalAmostras = totalAmostras
         self.qtdDescartes = 0
-        self.qtQuadros = math.ceil(len(encodedData) / tamanhoQuadro)
+        self.qtQuadros = math.ceil(totalAmostras / tamanhoQuadro)
     
+    @classmethod
+    def comAmostrasDescartadas(cls, encodedData, tamanhoQuadro, totalAmostras, qtdDescartes):
+        encoded = cls(encodedData, tamanhoQuadro, totalAmostras)
+        encoded.qtdDescartes = qtdDescartes
+        encoded._preencherQuadros()
+        return encoded
+    
+    def _preencherQuadros(self):
+        if self.qtdDescartes == 0:
+            return
+        
+        zeros = np.zeros(self.qtdDescartes)
+        posicao_zeros_relativa = self.tamanhoQuadro - self.qtdDescartes
+        for i in range(0, self.qtQuadros):
+            pos = i * self.tamanhoQuadro + posicao_zeros_relativa
+            self.encodedData = np.insert(self.encodedData, pos, zeros)
+
+
     def descartar(self, qtdDescartes):
         self.qtdDescartes = qtdDescartes
+    
+    def getEncodedData(self):
+        return self.encodedData
     
     def getData(self):
         ret = np.zeros(self.qtQuadros * (self.tamanhoQuadro - self.qtdDescartes))
