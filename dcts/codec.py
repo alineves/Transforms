@@ -7,8 +7,8 @@ def _calcularJanelaCosenoLevantado(sobreposicao):
     h2 = np.empty(sobreposicao)
     for i in range(0, sobreposicao):
         cosenoLevantado = math.cos(math.pi * i / sobreposicao)
-        h1[i] = 0.5 * (1 - cosenoLevantado)
-        h2[i] = 0.5 * (1 + cosenoLevantado)
+        h1[i] = 0.5 * (1 + cosenoLevantado)
+        h2[i] = 0.5 * (1 - cosenoLevantado)
     return h1, h2
 
 def _decodeSobreposto(dados, amostrasPorQuadro, funcCalc, funcBase, sobreposicao):

@@ -4,6 +4,9 @@ import numpy as np
 import struct
 import dcts.wave as wave
 
+saveType  = 'int16'
+savePack = '>h'
+
 class WaveEncoded:
     encodedData = []
     tamanhoQuadro = 0
@@ -65,9 +68,9 @@ class WaveEncoded:
         desn = self.getDadosComprimidos()
         max = desn.max()
         writter.write(struct.pack('d', max))
-        norm = _normalize(desn, max, 'int16')
+        norm = _normalize(desn, max, saveType)
         for i in range(0, len(norm)):
-            writter.write(struct.pack('>h', norm[i]))
+            writter.write(struct.pack(savePack, norm[i]))
 
     def saveToFile(self, filename):
         with open(filename, 'wb') as f:
@@ -96,13 +99,13 @@ def _readMax(reader):
 def _readData(reader):
     max = _readMax(reader)
     buff = reader.read()
-    isize = struct.calcsize('>h')
+    isize = struct.calcsize(savePack)
     size = len(buff) // isize
     ret = np.empty(size)
     for i in range(0, size):
-        val = struct.unpack_from('>h', buff, offset=(i * isize))[0]
+        val = struct.unpack_from(savePack, buff, offset=(i * isize))[0]
         ret[i] = val
-    return ret / wave.normalizer('int16') * max
+    return ret / wave.normalizer(saveType) * max
 
 def _readHeader(reader):
     size = struct.calcsize('IHHH')
