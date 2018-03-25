@@ -7,6 +7,10 @@ def open_wave(filename):
     rate, audData = read(filename)
     return rate, normalize(audData)
 
+def open_wave_nn(filename):
+    rate, audData = read(filename)
+    return rate, audData
+
 def save_wave(filename, rate, data, br):
     write(filename, rate, desnormalize(data, br))
 

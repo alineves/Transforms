@@ -62,7 +62,7 @@ def encode(audioData, fs, tempoQuadro, alg, sobreposicao = 0):
         encData = _encodeSobreposto(audioData, tamanhoQuadro, alg.encode, alg.calculaBase, sobreposicao)
     else:
         encData = codec(audioData, tamanhoQuadro, alg.encode, alg.calculaBase) 
-    return enc.WaveEncoded(encData, tamanhoQuadro, len(audioData), sobreposicao)
+    return enc.WaveEncoded(encData, tamanhoQuadro, len(audioData), fs, sobreposicao)
 
 def _decode(encoded, tamanhoQuadro, alg, sobreposicao = 0):
     if (sobreposicao > 0):

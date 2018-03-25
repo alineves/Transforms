@@ -29,7 +29,7 @@ class TestCodec(unittest.TestCase):
         self.assertTrue(np.array_equal(result.getDadosComprimidos(), [3, 5, 7, 9, 9, 3, 5, 7, 7, 9, 1, 1]))
 
     def test_decode_sobreposicao(self):
-        encoded = enc.WaveEncoded([3, 5, 7, 9, 9, 3, 5, 7, 7, 9, 1, 1], 4, 8, 1)
+        encoded = enc.WaveEncoded([3, 5, 7, 9, 9, 3, 5, 7, 7, 9, 1, 1], 4, 8, 4400, 1)
         result = cd.decodeFromEncoded(encoded, mock_alg)
         self.assertTrue(np.array_equal(result, [1, 2, 3, 4, 1, 2, 3, 4]))
 

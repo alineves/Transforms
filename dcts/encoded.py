@@ -12,20 +12,22 @@ class WaveEncoded:
     tamanhoQuadro = 0
     qtdDescartes = 0
     qtQuadros = 0
+    fs = 0
     totalAmostras = 0
     sobreposicao = 0
 
-    def __init__(self, encodedData, tamanhoQuadro, totalAmostras, sobreposicao = 0):
+    def __init__(self, encodedData, tamanhoQuadro, totalAmostras, fs, sobreposicao = 0):
         self.encodedData = encodedData
         self.tamanhoQuadro = tamanhoQuadro
         self.totalAmostras = totalAmostras
         self.sobreposicao = sobreposicao
+        self.fs  = fs
         self.qtdDescartes = 0
         self.qtQuadros = math.ceil(totalAmostras / (tamanhoQuadro - sobreposicao))
     
     @classmethod
-    def comAmostrasDescartadas(cls, encodedData, tamanhoQuadro, totalAmostras, qtdDescartes, sobreposicao = 0):
-        encoded = cls(encodedData, tamanhoQuadro, totalAmostras, sobreposicao)
+    def comAmostrasDescartadas(cls, encodedData, tamanhoQuadro, totalAmostras, qtdDescartes, fs, sobreposicao = 0):
+        encoded = cls(encodedData, tamanhoQuadro, totalAmostras, fs, sobreposicao)
         encoded.qtdDescartes = qtdDescartes
         encoded._preencherQuadros()
         return encoded
@@ -61,8 +63,8 @@ class WaveEncoded:
         return ret
 
     def _writeHeader(self, writter):
-        writter.write(struct.pack('IHHH',  self.totalAmostras,
-         self.tamanhoQuadro, self.qtdDescartes, self.sobreposicao))
+        writter.write(struct.pack('IHHIH',  self.totalAmostras,
+         self.tamanhoQuadro, self.qtdDescartes, self.fs, self.sobreposicao))
 
     def _writeData(self, writter):
         desn = self.getDadosComprimidos()
@@ -80,16 +82,16 @@ class WaveEncoded:
     @classmethod
     def loadFromFile(cls, filename):
         with open(filename, 'rb') as r:
-            (totalAmostras, tamanhoQuadro, qtdDescartes, sobreposicao) = _readHeader(r)
+            (totalAmostras, tamanhoQuadro, qtdDescartes, fs, sobreposicao) = _readHeader(r)
             encodedData = _readData(r)
             return WaveEncoded.comAmostrasDescartadas(
                 encodedData, tamanhoQuadro,
-                totalAmostras, qtdDescartes, sobreposicao)
+                totalAmostras, qtdDescartes, fs, sobreposicao)
     
     @classmethod
     def loadFromEncoded(cls, encoded):
         return WaveEncoded.comAmostrasDescartadas(encoded.getDadosComprimidos(),
-            encoded.tamanhoQuadro, encoded.totalAmostras, encoded.qtdDescartes, encoded.sobreposicao)
+            encoded.tamanhoQuadro, encoded.totalAmostras, encoded.qtdDescartes, encoded.fs, encoded.sobreposicao)
 
 def _readMax(reader):
     size = struct.calcsize('d')
@@ -108,10 +110,10 @@ def _readData(reader):
     return ret / wave.normalizer(saveType) * max
 
 def _readHeader(reader):
-    size = struct.calcsize('IHHH')
+    size = struct.calcsize('IHHIH')
     buff = reader.read(size)
-    (totalAmostras, tamanhoQuadro, qtdDescartes, sobreposicao) = struct.unpack('IHHH', buff)
-    return (totalAmostras, tamanhoQuadro, qtdDescartes, sobreposicao)
+    (totalAmostras, tamanhoQuadro, qtdDescartes, fs, sobreposicao) = struct.unpack('IHHIH', buff)
+    return (totalAmostras, tamanhoQuadro, qtdDescartes, fs, sobreposicao)
 
 def _normalize(array, max, tp):
     return ((array / max) * wave.normalizer(tp)).astype(tp)
