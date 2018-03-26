@@ -7,7 +7,8 @@ while read -a line; do
     descartes=${line[2]}
     files=$(stat --printf="%s" waves/$filename)
 
-    python encode.py waves/$filename $descartes $sobreposicao result/$filename.sdct1
+    
+    python encode.py waves/$filename $descartes $sobreposicao result/$filename.sdct1 result/$filename.semsalvar.s$sobreposicao.$descartes.wav
     nf=result/$filename.s$sobreposicao.$descartes.wav
     python decode.py result/$filename.sdct1 $nf
 
