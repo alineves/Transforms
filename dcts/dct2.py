@@ -11,7 +11,7 @@ def calculaBase(amostrasPorQuadro):
     return base2
 
 def encode(quadro, base):
-    return quadro.dot(base) * 2
+    return base.dot(quadro) * 2
 
 def decode(quadro, base):
     quadro[0] *= 0.5 

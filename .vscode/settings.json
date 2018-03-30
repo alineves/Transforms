@@ -7,5 +7,7 @@
         "*_test.py"
     ],
     "python.unitTest.unittestEnabled": true,
-    "python.linting.pylintEnabled": false
+    "python.linting.pylintEnabled": false,
+    "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe",
+    "python.pythonPath": "C:\\Users\\Aline\\AppData\\Local\\Programs\\Python\\Python36-32\\python.exe"
 }
