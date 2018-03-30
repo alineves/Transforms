@@ -2,6 +2,7 @@ import dcts.wave as wv
 import dcts.codec as codec
 import dcts.encoded as enc
 import dcts.dct1 as dct1
+import dcts.dct2 as dct2
 import sys
 import numpy as np
 

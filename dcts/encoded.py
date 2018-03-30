@@ -5,7 +5,7 @@ import struct
 import dcts.wave as wave
 
 saveType  = 'int16'
-savePack = '>h'
+savePack = '>h'# h 2 bytes positivo ou negativo / H é só positivo
 
 class WaveEncoded:
     encodedData = []
