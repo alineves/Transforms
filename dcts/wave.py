@@ -21,7 +21,7 @@ def normalizer(dtype):
     elif dtype == 'int32':
         nb_bits = 32
 
-    return 2 ** (nb_bits - 1)
+    return (2 ** (nb_bits - 1)) - 1
 
 def normalize(audData):
     max_nb_bit = float(normalizer(audData.dtype))

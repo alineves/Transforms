@@ -1,3 +1,4 @@
+from enum import Enum
 import numpy as np
 import math
 import numpy as np
@@ -7,112 +8,117 @@ import dcts.wave as wave
 saveType  = 'int16'
 savePack = '>h'
 
-class WaveEncoded:
-    encodedData = []
-    qtdDescartes = 0
-    fs = 0
-    totalAmostras = 0
-    mode = ""
-    level = 0
+class TipoCompressao(Enum):
+    NENHUMA = 0
+    REMOVE_ULTIMO_CD = 1
 
-    def __init__(self, encodedData, fs, totalAmostras, mode, level):
-        self.encodedData = encodedData
-        self.fs  = fs
-        self.totalAmostras = totalAmostras
-        self.mode = mode
-        self.level = level
-        self.qtdDescartes = 0
+class Mode(Enum):
+    DB1 = 0
+    DB2 = 1
 
     @classmethod
-    def comAmostrasDescartadas(cls, encodedData, totalAmostras, qtdDescartes, fs, mode, level):
-        encoded = cls(encodedData, fs, totalAmostras, mode, level)
-        encoded.qtdDescartes = qtdDescartes
-        encoded._preencherQuadros()
-        return encoded
+    def fromString(cls, string):
+        return {
+            'db1': cls.DB1,
+            'db2': cls.DB2
+        }[string]
+
+    def __str__(self):
+        return {
+            DB1: 'db1',
+            DB2: 'db2'
+        }[self]
+
+class Quadro:
+    cds = []
     
-    def _preencherQuadros(self):
-        if self.qtdDescartes == 0:
-            return
-        
-        zeros = np.zeros(self.qtdDescartes)
-        posicao_zeros_relativa = self.tamanhoQuadro - self.qtdDescartes
-        for i in range(0, self.qtQuadros):
-            pos = i * self.tamanhoQuadro + posicao_zeros_relativa
-            self.encodedData = np.insert(self.encodedData, pos, zeros)
-
-
-    def descartar(self, qtdDescartes):
-        self.qtdDescartes = qtdDescartes
+    @classmethod
+    def fromEncode(cls, dadosQuadro):
+        quadro = cls()
+        quadro.ca = dadosQuadro[0]
+        for i in range(1, len(dadosQuadro)): 
+            quadro.cds.append(dadosQuadro[i])
+        return quadro
     
-    def getDados(self):
-        return self.encodedData
+    @classmethod
+    def fromReader(cls, reader):
+        quadro = cls()
+        qtdCds = struct.unpack('I', reader.read(struct.calcsize('I')))
+        quadro.__readCA()
+        for i in range(0, qtdQuadros):
+            quadro.addQuadro(quadro.__readArray(reader))
+    
+    def write(self, tipoCompressao, writer):
+        self.__writeHeader(writer)
+        self.__writeData(tipoCompressao, writer)
 
-    def getDadosComprimidos(self):
-        ret = np.empty(0)
-        for i in range(0, self.qtQuadros):
-            init = i * self.tamanhoQuadro
-            end = init + self.tamanhoQuadro - self.qtdDescartes
-
-            retInit = i * (self.tamanhoQuadro - self.qtdDescartes)
-            retEnd = retInit + self.tamanhoQuadro - self.qtdDescartes
-            ret[retInit : retEnd] = self.encodedData[init : end]
-        return ret
-
-    def _writeHeader(self, writter):
-        writter.write(struct.pack('IIHsB',  self.fs, self.totalAmostras, self.qtdDescartes, self.mode, self.level))
-
-    def _writeData(self, writter):
-        desn = self.getDadosComprimidos()
-        max = desn.max()
-        writter.write(struct.pack('d', max))
-        norm = _normalize(desn, max, saveType)
+    def __writeData(self, tipoCompressao, writer):
+        self.__writeArray(writer, self.ca)
+        for i in range(0, len(self.cds)):
+            self.__writeArray(writer, self.cds[i])
+    
+    def __writeArray(self, writer, array):
+        max = array.max()
+        writer.write(struct.pack('Hd', len(array), max))
+        norm = _normalize(array, max)
         for i in range(0, len(norm)):
-            piece = norm[i]
-            writter.write('I', len(piece))
-            for j in range(0, len(piece))
-                writter.write(struct.pack(savePack, piece[j]))
+            writer.write(struct.pack(savePack, norm[i]))
+
+    def __writeHeader(self, writer):
+        writer.write(struct.pack('I', len(self.cds)))
+    
+    def __readCA(self, reader):
+        self.ca = self.readArray(reader)
+    
+    def __readArray(self, reader):
+        buffHeader = reader.read(struct.calcsize('Hd'))
+        (size, max) = struct.unpack('Hd', buffHeader)
+        buffData = reader.read(struct.calcsize(savePack) * size)
+        return __desnormalize(np.array(buffData), max)
+
+class WaveEncoded:
+    quadros = []
+    tipoCompressao = TipoCompressao.NENHUMA
+
+    @classmethod
+    def fromEncoded(cls, fs, totalAmostras, amostrasPorQuadro, mode, level):
+        encoded = cls()
+        encoded.fs  = fs
+        encoded.totalAmostras = totalAmostras
+        encoded.amostrasPorQuadro = amostrasPorQuadro
+        encoded.mode = mode
+        encoded.level = level
+        return encoded
+
+    @classmethod
+    def fromFile(cls, filename):
+        with open(filename, 'rb') as reader:
+            size = struct.calcsize('IIIBBB')
+            buff = reader.read(size)
+            (fs, totalAmostras, amostrasPorQuadro, tipoCompressao, mode, level) = struct.unpack('IIIBBB', buff)
+            encoded  = cls.fromEncoded(fs, totalAmostras, amostrasPorQuadro, Mode(mode), level)
+            encoded.tipoCompressao = TipoCompressao(tipoCompressao)
+        return encoded
+
+    def addQuadro(self, dadosQuadro):
+        self.quadros.append(Quadro.fromEncode(dadosQuadro))
+
+    def __writeHeader(self, writer):
+        writer.write(struct.pack('IIIBBB',
+            self.fs, self.totalAmostras, self.amostrasPorQuadro, self.tipoCompressao.value, self.mode.value, self.level))
+
+    def __writeData(self, writer):
+        for i in range(0, len(self.quadros)):
+            quadro = self.quadros[i]
+            quadro.write(self.tipoCompressao, writer)
 
     def saveToFile(self, filename):
         with open(filename, 'wb') as f:
-            self._writeHeader(f)
-            self._writeData(f)
+            self.__writeHeader(f)
+            self.__writeData(f)
 
-    @classmethod
-    def loadFromFile(cls, filename):
-        with open(filename, 'rb') as r:
-            (totalAmostras, tamanhoQuadro, qtdDescartes, fs, sobreposicao) = _readHeader(r)
-            encodedData = _readData(r)
-            return WaveEncoded.comAmostrasDescartadas(
-                encodedData, tamanhoQuadro,
-                totalAmostras, qtdDescartes, fs, sobreposicao)
-    
-    @classmethod
-    def loadFromEncoded(cls, encoded):
-        return WaveEncoded.comAmostrasDescartadas(encoded.getDadosComprimidos(),
-            encoded.tamanhoQuadro, encoded.totalAmostras, encoded.qtdDescartes, encoded.fs, encoded.sobreposicao)
+def _normalize(array, max):
+    return ((array / max) * wave.normalizer(saveType)).astype(saveType)
 
-def _readMax(reader):
-    size = struct.calcsize('d')
-    buff = reader.read(size)
-    return struct.unpack('d', buff)
-
-def _readData(reader):
-    max = _readMax(reader)
-    buff = reader.read()
-    isize = struct.calcsize(savePack)
-    size = len(buff) // isize
-    ret = np.empty(size)
-    for i in range(0, size):
-        val = struct.unpack_from(savePack, buff, offset=(i * isize))[0]
-        ret[i] = val
-    return ret / wave.normalizer(saveType) * max
-
-def _readHeader(reader):
-    size = struct.calcsize('IIfsB')
-    buff = reader.read(size)
-    (fs, totalAmostras, qtdDescartes, mode, level) = struct.unpack('IIfsB', buff)
-    return (fs, totalAmostras, qtdDescartes, mode, level)
-
-def _normalize(array, max, tp):
-    return ((array / max) * wave.normalizer(tp)).astype(tp)
-    
+def __desnormalize(array, max):
+    return array / wave.normalizer(saveType) * max
