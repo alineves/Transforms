@@ -44,6 +44,7 @@ class Quadro:
         quadro.__readCA(reader)
         for i in range(0, qtdCds):
             quadro.cds.append(quadro.__readArray(reader))
+        return quadro
     
     def write(self, tipoCompressao, writer):
         self.__writeHeader(writer)
