@@ -23,18 +23,14 @@ class Mode(Enum):
             'db2': cls.DB2
         }[string]
 
-    def __str__(self):
-        return {
-            DB1: 'db1',
-            DB2: 'db2'
-        }[self]
+    def toString(self):
+        return self.name.lower()
 
 class Quadro:
-    cds = []
-    
     @classmethod
     def fromEncode(cls, dadosQuadro):
         quadro = cls()
+        quadro.cds = []
         quadro.ca = dadosQuadro[0]
         for i in range(1, len(dadosQuadro)): 
             quadro.cds.append(dadosQuadro[i])
@@ -43,7 +39,7 @@ class Quadro:
     @classmethod
     def fromReader(cls, reader):
         quadro = cls()
-        qtdCds = struct.unpack('I', reader.read(struct.calcsize('I')))
+        qtdCds = struct.unpack('B', reader.read(struct.calcsize('B')))
         quadro.__readCA()
         for i in range(0, qtdQuadros):
             quadro.addQuadro(quadro.__readArray(reader))
@@ -65,7 +61,7 @@ class Quadro:
             writer.write(struct.pack(savePack, norm[i]))
 
     def __writeHeader(self, writer):
-        writer.write(struct.pack('I', len(self.cds)))
+        writer.write(struct.pack('B', len(self.cds)))
     
     def __readCA(self, reader):
         self.ca = self.readArray(reader)

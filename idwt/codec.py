@@ -14,6 +14,19 @@ def encode(dados, fs, tempoQuadro, mode, level):
         ret.addQuadro(result)
     return ret
 
+def decode(encoded):
+    ret = np.empty(0)
+    for i in range(0, len(encoded.quadros)):
+        quadro = encoded.quadros[i]
+        coeffs = [quadro.ca]
+        coeffs.extend(quadro.cds)
+        dadosQuadro = pywt.waverec(coeffs, encoded.mode.toString())
+        ret = np.append(ret, dadosQuadro)
+
+    totalAmostras = encoded.totalAmostras
+    return np.resize(ret, totalAmostras)
+
+
 def _extrairQuadro(audioData, inicio, amostrasPorQuadro):
     quadro = audioData[inicio: inicio + amostrasPorQuadro]
     tamanho = len(quadro)
