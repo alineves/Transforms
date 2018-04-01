@@ -13,7 +13,7 @@ def _calcularJanelaCosenoLevantado(sobreposicao):
 
 def _decodeSobreposto(dados, amostrasPorQuadro, funcCalc, funcBase, sobreposicao):
     totalAmostras = len(dados)
-    base = funcBase(amostrasPorQuadro)
+    base = funcBase(amostrasPorQuadro)c
 
     h1, h2 = _calcularJanelaCosenoLevantado(sobreposicao)
 
@@ -58,10 +58,7 @@ def _extrairQuadro(audioData, inicio, amostrasPorQuadro):
 
 def encode(audioData, fs, tempoQuadro, alg, sobreposicao = 0):
     tamanhoQuadro = calculaTamanhoQuadro(fs, tempoQuadro)
-    if (sobreposicao > 0):
-        encData = _encodeSobreposto(audioData, tamanhoQuadro, alg.encode, alg.calculaBase, sobreposicao)
-    else:
-        encData = codec(audioData, tamanhoQuadro, alg.encode, alg.calculaBase) 
+    encData = _encodeSobreposto(audioData, tamanhoQuadro, alg.encode, alg.calculaBase, sobreposicao)
     return enc.WaveEncoded(encData, tamanhoQuadro, len(audioData), fs, sobreposicao)
 
 def _decode(encoded, tamanhoQuadro, alg, sobreposicao = 0):
