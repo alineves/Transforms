@@ -18,8 +18,6 @@ def decode(encoded):
     ret = np.empty(0)
     for i in range(0, len(encoded.quadros)):
         quadro = encoded.quadros[i]
-        if (quadro is None):
-            print('AAAAA')
         coeffs = [quadro.ca]
         coeffs.extend(quadro.cds)
         dadosQuadro = pywt.waverec(coeffs, encoded.mode.toString())
