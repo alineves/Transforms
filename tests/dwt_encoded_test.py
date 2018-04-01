@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-import idwt.encoded as enc
+import dwt.encoded as enc
 
 class TestEncoded(unittest.TestCase):
 

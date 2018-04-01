@@ -13,7 +13,7 @@ def _calcularJanelaCosenoLevantado(sobreposicao):
 
 def _decodeSobreposto(dados, amostrasPorQuadro, funcCalc, funcBase, sobreposicao):
     totalAmostras = len(dados)
-    base = funcBase(amostrasPorQuadro)c
+    base = funcBase(amostrasPorQuadro)
 
     h1, h2 = _calcularJanelaCosenoLevantado(sobreposicao)
 
