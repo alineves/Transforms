@@ -8,10 +8,6 @@ import dcts.wave as wave
 saveType  = 'int16'
 savePack = '>h'
 
-class TipoCompressao(Enum):
-    NENHUMA = 0
-    REMOVE_ULTIMO_CD = 1
-
 class Mode(Enum):
     DB1 = 0
     DB2 = 1
@@ -46,11 +42,21 @@ class Quadro:
             quadro.cds.append(quadro.__readArray(reader))
         return quadro
     
-    def write(self, tipoCompressao, writer):
-        self.__writeHeader(writer)
-        self.__writeData(tipoCompressao, writer)
+    def comprimido(self, tipoCompressao):
+        if (tipoCompressao is TipoCompressao.NENHUMA):
+            return self
 
-    def __writeData(self, tipoCompressao, writer):
+        Quadro comprimido = Quadro()
+        comprimido.ca = self.ca.copy()
+        if (tipoCompressao is TipoCompressao.REMOVE_ULTIMO_CD):
+            comprimido.cds = self.cds[:-1]
+        return comprimido
+    
+    def write(self, writer):
+        self.__writeHeader(writer)
+        self.__writeData(writer)
+
+    def __writeData(self, writer):
         self.__writeArray(writer, self.ca)
         for i in range(0, len(self.cds)):
             self.__writeArray(writer, self.cds[i])
@@ -84,7 +90,7 @@ class WaveEncoded:
     def fromEncoded(cls, fs, totalAmostras, amostrasPorQuadro, mode, level):
         encoded = cls()
         encoded.quadros = []
-        encoded.tipoCompressao = TipoCompressao.NENHUMA
+        encoded.cdsRemovidos = []
         encoded.fs  = fs
         encoded.totalAmostras = totalAmostras
         encoded.amostrasPorQuadro = amostrasPorQuadro
@@ -95,20 +101,14 @@ class WaveEncoded:
     @classmethod
     def fromFile(cls, filename):
         with open(filename, 'rb') as reader:
-            size = struct.calcsize('IIIIBBB')
+            size = struct.calcsize('IIIIBB')
             buff = reader.read(size)
-            (fs, totalAmostras, amostrasPorQuadro, qtdQuadros, tipoCompressao, mode, level) = struct.unpack('IIIIBBB', buff)
+            (fs, totalAmostras, amostrasPorQuadro, qtdQuadros, mode, level) = struct.unpack('IIIIBB', buff)
             encoded  = cls.fromEncoded(fs, totalAmostras, amostrasPorQuadro, Mode(mode), level)
-            encoded.tipoCompressao = TipoCompressao(tipoCompressao)
             encoded.__readQuadros(qtdQuadros, reader)
         return encoded
     
     def __readQuadros(self, qtdQuadros, reader):
-        if (self.tipoCompressao is TipoCompressao.NENHUMA):
-            self.__readTodosQuadros(qtdQuadros, reader)
-            return
-    
-    def __readTodosQuadros(self, qtdQuadros, reader):
         for i in range(0,qtdQuadros):
             self.quadros.append(Quadro.fromReader(reader))
 
@@ -116,9 +116,9 @@ class WaveEncoded:
         self.quadros.append(Quadro.fromEncode(dadosQuadro))
 
     def __writeHeader(self, writer):
-        writer.write(struct.pack('IIIIBBB',
+        writer.write(struct.pack('IIIIBB',
             self.fs, self.totalAmostras, self.amostrasPorQuadro, len(self.quadros),
-            self.tipoCompressao.value, self.mode.value, self.level))
+            self.mode.value, self.level))
 
     def __writeData(self, writer):
         for i in range(0, len(self.quadros)):
