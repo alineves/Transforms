@@ -1,6 +1,6 @@
 import dcts.wave as wv
-import idwt.codec as codec
-import idwt.encoded as enc
+import dwt.codec as codec
+import dwt.encoded as enc
 import numpy as np
 
 fs, audData = wv.open_wave("./waves/m0003022.WAV")

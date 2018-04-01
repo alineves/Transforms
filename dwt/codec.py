@@ -1,7 +1,7 @@
 import pywt
 import math
 import numpy as np
-import idwt.encoded as enc
+import dwt.encoded as enc
 
 def encode(dados, fs, tempoQuadro, mode, level):
     totalAmostras = len(dados)
