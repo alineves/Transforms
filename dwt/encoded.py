@@ -42,16 +42,6 @@ class Quadro:
             quadro.cds.append(quadro.__readArray(reader))
         return quadro
     
-    def comprimido(self, tipoCompressao):
-        if (tipoCompressao is TipoCompressao.NENHUMA):
-            return self
-
-        Quadro comprimido = Quadro()
-        comprimido.ca = self.ca.copy()
-        if (tipoCompressao is TipoCompressao.REMOVE_ULTIMO_CD):
-            comprimido.cds = self.cds[:-1]
-        return comprimido
-    
     def write(self, writer):
         self.__writeHeader(writer)
         self.__writeData(writer)
@@ -90,13 +80,17 @@ class WaveEncoded:
     def fromEncoded(cls, fs, totalAmostras, amostrasPorQuadro, mode, level):
         encoded = cls()
         encoded.quadros = []
-        encoded.cdsRemovidos = []
+        encoded.cdsRemovidos = set([])
         encoded.fs  = fs
         encoded.totalAmostras = totalAmostras
         encoded.amostrasPorQuadro = amostrasPorQuadro
         encoded.mode = mode
         encoded.level = level
         return encoded
+    
+    def removerCDs(self, *cds):
+        for i in range(len(cds)):
+            self.cdsRemovidos.add(cds[i])
 
     @classmethod
     def fromFile(cls, filename):
@@ -105,9 +99,21 @@ class WaveEncoded:
             buff = reader.read(size)
             (fs, totalAmostras, amostrasPorQuadro, qtdQuadros, mode, level) = struct.unpack('IIIIBB', buff)
             encoded  = cls.fromEncoded(fs, totalAmostras, amostrasPorQuadro, Mode(mode), level)
+            encoded.__readCdsRemovidos(reader)
             encoded.__readQuadros(qtdQuadros, reader)
         return encoded
     
+    def __readCdsRemovidos(self, reader):
+        bsize = struct.calcsize('B')
+        cdsRemovidosSize = struct.unpack('B', reader.read(bsize))[0]
+        
+        self.cdsRemovidos = set([])
+        buffer = reader.read(cdsRemovidosSize * bsize)
+        for i in range(cdsRemovidosSize):
+            cdRemovido = struct.unpack_from('B', buffer, offset=(i * cdsRemovidosSize))
+            self.cdsRemovidos.add(cdRemovido)
+
+
     def __readQuadros(self, qtdQuadros, reader):
         for i in range(0,qtdQuadros):
             self.quadros.append(Quadro.fromReader(reader))
@@ -119,11 +125,17 @@ class WaveEncoded:
         writer.write(struct.pack('IIIIBB',
             self.fs, self.totalAmostras, self.amostrasPorQuadro, len(self.quadros),
             self.mode.value, self.level))
+        self.__writeCdsRemovidos(writer)
+    
+    def __writeCdsRemovidos(self, writer):
+        writer.write(struct.pack('B', len(self.cdsRemovidos)))
+        for i in self.cdsRemovidos:
+            writer.write(struct.pack('B', i))
 
     def __writeData(self, writer):
         for i in range(0, len(self.quadros)):
             quadro = self.quadros[i]
-            quadro.write(self.tipoCompressao, writer)
+            quadro.write(writer)
 
     def saveToFile(self, filename):
         with open(filename, 'wb') as f:
