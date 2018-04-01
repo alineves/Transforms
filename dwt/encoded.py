@@ -42,6 +42,17 @@ class Quadro:
             quadro.cds.append(quadro.__readArray(reader))
         return quadro
     
+    def getCDs(self, cdsRemovidos):
+        ret = []
+        for i in range(len(self.cds)):
+            cd = self.cds[i]
+            if (i in cdsRemovidos):
+                size = len(cd)
+                ret.append(np.zeros(size))
+            else:
+                ret.append(cd)
+        return ret
+    
     def write(self, writer):
         self.__writeHeader(writer)
         self.__writeData(writer)
@@ -91,6 +102,15 @@ class WaveEncoded:
     def removerCDs(self, *cds):
         for i in range(len(cds)):
             self.cdsRemovidos.add(cds[i])
+    
+    def quantidadeQuadros(self):
+        return len(self.quadros)
+
+    def dadosQuadro(self, idxQuadro):
+        quadro = self.quadros[idxQuadro]
+        ret = [quadro.ca]
+        ret.extend(quadro.getCDs(self.cdsRemovidos))
+        return ret
 
     @classmethod
     def fromFile(cls, filename):

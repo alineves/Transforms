@@ -16,10 +16,8 @@ def encode(dados, fs, tempoQuadro, mode, level):
 
 def decode(encoded):
     ret = np.empty(0)
-    for i in range(0, len(encoded.quadros)):
-        quadro = encoded.quadros[i]
-        coeffs = [quadro.ca]
-        coeffs.extend(quadro.cds)
+    for i in range(encoded.quantidadeQuadros()):
+        coeffs = encoded.dadosQuadro(i)
         dadosQuadro = pywt.waverec(coeffs, encoded.mode.toString())
         ret = np.append(ret, dadosQuadro)
 

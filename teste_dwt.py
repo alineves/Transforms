@@ -7,7 +7,7 @@ fs, audData = wv.open_wave("./waves/m0003022.WAV")
 
 encoded = codec.encode(audData, fs, 0.02, 'db1', 4)
 
-encoded.removerCDs(3)
+encoded.removerCDs(3, 1)
 encoded.saveToFile('./result/m0003022.dwt')
 
 rest = codec.decode(encoded)
