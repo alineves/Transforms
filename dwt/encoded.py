@@ -9,14 +9,26 @@ saveType  = 'int16'
 savePack = '>h'
 
 class Mode(Enum):
-    DB1 = 0
-    DB2 = 1
+    DB1 = 1
+    DB2 = 2
+    DB3 = 3
+    DB4 = 4
+    DB5 = 5
+    DB6 = 6
+    DB7 = 7
+    DB8 = 8
 
     @classmethod
     def fromString(cls, string):
         return {
             'db1': cls.DB1,
-            'db2': cls.DB2
+            'db2': cls.DB2,
+            'db3': cls.DB3,
+            'db4': cls.DB4,
+            'db5': cls.DB5,
+            'db6': cls.DB6,
+            'db7': cls.DB7,
+            'db8': cls.DB8
         }[string]
 
     def toString(self):
