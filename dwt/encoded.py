@@ -100,7 +100,7 @@ class Quadro:
 class WaveEncoded:
 
     @classmethod
-    def fromEncoded(cls, fs, totalAmostras, amostrasPorQuadro, mode, level):
+    def fromEncoded(cls, fs, totalAmostras, amostrasPorQuadro, mode, level, sobreposicao = 0):
         encoded = cls()
         encoded.quadros = []
         encoded.cdsRemovidos = set([])
@@ -109,6 +109,7 @@ class WaveEncoded:
         encoded.amostrasPorQuadro = amostrasPorQuadro
         encoded.mode = mode
         encoded.level = level
+        encoded.sobreposicao = sobreposicao
         return encoded
     
     def removerCDs(self, *cds):
@@ -127,10 +128,10 @@ class WaveEncoded:
     @classmethod
     def fromFile(cls, filename):
         with open(filename, 'rb') as reader:
-            size = struct.calcsize('IIIIBB')
+            size = struct.calcsize('IIIIBBB')
             buff = reader.read(size)
-            (fs, totalAmostras, amostrasPorQuadro, qtdQuadros, mode, level) = struct.unpack('IIIIBB', buff)
-            encoded  = cls.fromEncoded(fs, totalAmostras, amostrasPorQuadro, Mode(mode), level)
+            (fs, totalAmostras, amostrasPorQuadro, qtdQuadros, mode, level, sobreposicao) = struct.unpack('IIIIBBB', buff)
+            encoded  = cls.fromEncoded(fs, totalAmostras, amostrasPorQuadro, Mode(mode), level, sobreposicao)
             encoded.__readCdsRemovidos(reader)
             encoded.__readQuadros(qtdQuadros, reader)
         return encoded
@@ -145,7 +146,6 @@ class WaveEncoded:
             cdRemovido = struct.unpack_from('B', buffer, offset=(i * cdsRemovidosSize))
             self.cdsRemovidos.add(cdRemovido)
 
-
     def __readQuadros(self, qtdQuadros, reader):
         for i in range(0,qtdQuadros):
             self.quadros.append(Quadro.fromReader(reader))
@@ -154,9 +154,9 @@ class WaveEncoded:
         self.quadros.append(Quadro.fromEncode(dadosQuadro))
 
     def __writeHeader(self, writer):
-        writer.write(struct.pack('IIIIBB',
+        writer.write(struct.pack('IIIIBBB',
             self.fs, self.totalAmostras, self.amostrasPorQuadro, len(self.quadros),
-            self.mode.value, self.level))
+            self.mode.value, self.level, self.sobreposicao))
         self.__writeCdsRemovidos(writer)
     
     def __writeCdsRemovidos(self, writer):
