@@ -1,7 +1,7 @@
 import pywt
 import math
 import numpy as np
-import dwt.encoded as enc
+import dwt.encoded_sorted_energy as enc
 
 def encode(dados, fs, tempoQuadro, mode, level, sobreposicao = 0):
     totalAmostras = len(dados)

@@ -75,7 +75,7 @@ class Quadro:
             self.__writeArray(writer, self.cds[i])
     
     def __writeArray(self, writer, array):
-        max = array.max()
+        max = np.absolute(array).max()
         writer.write(struct.pack('Hd', len(array), max))
         norm = _normalize(array, max)
         for i in range(0, len(norm)):
