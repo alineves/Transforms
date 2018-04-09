@@ -68,7 +68,7 @@ class WaveEncoded:
 
     def _writeData(self, writter):
         desn = self.getDadosComprimidos()
-        max = desn.max()
+        max = np.absolute(desn).max()
         writter.write(struct.pack('d', max))
         norm = _normalize(desn, max, saveType)
         for i in range(0, len(norm)):

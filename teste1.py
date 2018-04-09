@@ -9,7 +9,7 @@ import dcts.dct4 as dct4
 
 fs, audData = wv.open_wave("./waves/f0001038.16k.WAV")
 
-encoded = codec.encode(audData, fs, 0.02, dct4, 20)
+encoded = codec.encode(audData, fs, 0.02, dct2, 20)
 
 encoded.descartar(160)
 encoded.saveToFile("./result/f0001038.16k.dct4")

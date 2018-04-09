@@ -10,7 +10,7 @@ def current_milli_time():
 fs, audData = wv.open_wave("./waves/f0001038.16k.WAV")
 
 b = current_milli_time()
-encoded = codec.encode(audData, fs, 0.02, 'db5', 5, sobreposicao=20)
+encoded = codec.encode(audData, fs, 0.1, 'db8', 6, sobreposicao=0)
 a = current_milli_time()
 print('Tempo de encode: ', a - b)
 
@@ -23,7 +23,7 @@ print('Tempo de decode: ', a - b)
 
 encoded.saveToFile('./result/f0001038.dwt')
 
-wv.save_wave("./result/f0001038.16k.db5.dec5.removeCd1.s20.wav", fs, rest, 16)
+wv.save_wave("./result/f0001038.16k.db8.dec6.removeCd1.s0.wav", fs, rest, 16)
 
 newEncoded = enc.WaveEncoded.fromFile('./result/f0001038.dwt')
 # rest = codec.decode(newEncoded)

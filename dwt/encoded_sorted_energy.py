@@ -79,10 +79,7 @@ class Quadro:
         for i in range(len(cdCompressed)):
             valor = cdCompressed[i]
             idx = idxsCompressed[i]
-            try:
-                ret[idx] = valor
-            except:
-                print("AA")
+            ret[idx] = valor
         return ret
 
     def write(self, writer, porcentagemDescarte):
