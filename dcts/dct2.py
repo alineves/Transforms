@@ -2,6 +2,12 @@ import math
 import numpy as np
 import dcts.codec as cd
 
+def getNumeroDCT():
+    return 2
+
+def matchNumeroDCT(numeroDCT):
+    return numeroDCT == 2
+
 def calculaBase(amostrasPorQuadro):
     base2 = np.zeros((amostrasPorQuadro, amostrasPorQuadro))
     for k in range(0, amostrasPorQuadro):
