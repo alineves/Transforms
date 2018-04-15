@@ -98,7 +98,9 @@ def decode(encoded, fs, tempoQuadro, alg, sobreposicao = 0):
 
 def decodeEnergy(encoded):
     alg = __getAlg(encoded.mode)
-    return  _decode(encoded.getDados(), encoded.amostrasPorQuadro, alg, encoded.sobreposicao)
+    result = _decode(encoded.getDados(), encoded.amostrasPorQuadro, alg, encoded.sobreposicao)
+    resultFinal = np.resize(result, encoded.totalAmostras)
+    return resultFinal
 
 def decodeFromEncoded(encoded, alg):
     novoEncoded = enc.WaveEncoded.loadFromEncoded(encoded)
