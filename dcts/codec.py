@@ -4,11 +4,16 @@ import dcts as dcts
 import dcts.encoded as enc
 import dcts.encoded_sorted_energy as encEnergy
 
+algs = []
+
 def __getAlg(numeroAlg):
-    for dct in [dcts.dct1, dcts.dct2, dcts.dct3, dcts.dct4]:
+    for dct in algs:
          if (dct.matchNumeroDCT(numeroAlg)):
              return dct
     raise Exception("Nenhum algoritmo DCT encontrado para número " + str(numeroAlg))
+
+def addAlg(alg):
+    algs.append(alg)
 
 def _calcularJanelaCosenoLevantado(sobreposicao):
     h1 = np.empty(sobreposicao)
@@ -47,7 +52,7 @@ def _encodeSobreposto(dados, amostrasPorQuadro, funcCalc, funcBase, sobreposicao
     base = funcBase(amostrasPorQuadro)
 
     ret = np.array([])
-    for i in range(0, totalAmostras, (amostrasPorQuadro - sobreposicao)):
+    for i in range(0, totalAmostras - sobreposicao, (amostrasPorQuadro - sobreposicao)):
         quadro = _extrairQuadro(dados, i, amostrasPorQuadro)
         result = funcCalc(quadro, base)
         ret = np.append(ret, result[0: amostrasPorQuadro])
@@ -75,7 +80,7 @@ def encodeEnergy(audioData, fs, tempoQuadro, alg, sobreposicao = 0):
     
     ret = encEnergy.WaveEncoded.fromEncoded(fs, len(audioData), tamanhoQuadro, alg.getNumeroDCT(), sobreposicao)
     retSize = len(encData)
-    for i in range(0, retSize, tamanhoQuadro - sobreposicao):
+    for i in range(0, retSize, tamanhoQuadro):
         dadosQuadro = _extrairQuadro(encData, i, tamanhoQuadro)
         ret.addQuadro(dadosQuadro)
 

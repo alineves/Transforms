@@ -8,7 +8,7 @@ def encode(dados, fs, tempoQuadro, mode, level, sobreposicao = 0):
     amostrasPorQuadro = int(fs * tempoQuadro)
 
     ret = enc.WaveEncoded.fromEncoded(fs, totalAmostras, amostrasPorQuadro, enc.Mode.fromString(mode), level, sobreposicao)
-    for i in range(0, totalAmostras, amostrasPorQuadro - sobreposicao):
+    for i in range(0, totalAmostras - sobreposicao, amostrasPorQuadro - sobreposicao):
         quadro = _extrairQuadro(dados, i, amostrasPorQuadro)
         result = pywt.wavedec(quadro, mode, level=level)
         ret.addQuadro(result)

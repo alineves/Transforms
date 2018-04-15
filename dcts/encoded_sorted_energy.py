@@ -48,8 +48,6 @@ class Quadro:
         return ret
 
     def write(self, writer, porcentagemDescarte):
-        self.__writeNormalizedArray(writer, self.dados)
-        
         coefsCompressed, idxsCompressed = self.__comprimir(self.dados, porcentagemDescarte)
         self.__writeNormalizedArray(writer, coefsCompressed)
             
@@ -59,6 +57,7 @@ class Quadro:
             pack = "B"
 
         writer.write(struct.pack("c", pack.encode()))
+        writer.write(struct.pack(pack, len(self.dados)))
         self.__writeArray(writer, idxsCompressed, pack)
     
     def __writeNormalizedArray(self, writer, array):
@@ -74,7 +73,16 @@ class Quadro:
             writer.write(struct.pack(pack, element))
 
     def __readCoefs(self, reader):
-        self.coefs = self.__readNormalizedArray(reader)
+        coefsCompressed = self.__readNormalizedArray(reader)
+
+        idxPack = struct.unpack('c', reader.read(struct.calcsize('c')))[0].decode()
+        size =  struct.unpack(idxPack, reader.read(struct.calcsize(idxPack)))[0]
+    
+        idxsCompressed = self.__readArray(reader, idxPack).astype('int16')
+        
+        coefs = self.__zerarCoefsComprimido(size, coefsCompressed, idxsCompressed)
+        return coefs
+
     
     def __readNormalizedArray(self, reader):
         ret = self.__readArray(reader)

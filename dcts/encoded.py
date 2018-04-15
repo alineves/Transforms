@@ -8,14 +8,6 @@ saveType  = 'int16'
 savePack = '>h'# h 2 bytes positivo ou negativo / H é só positivo
 
 class WaveEncoded:
-    encodedData = []
-    tamanhoQuadro = 0
-    qtdDescartes = 0
-    qtQuadros = 0
-    fs = 0
-    totalAmostras = 0
-    sobreposicao = 0
-
     def __init__(self, encodedData, tamanhoQuadro, totalAmostras, fs, sobreposicao = 0):
         self.encodedData = encodedData
         self.tamanhoQuadro = tamanhoQuadro
@@ -68,7 +60,10 @@ class WaveEncoded:
 
     def _writeData(self, writter):
         desn = self.getDadosComprimidos()
-        max = np.absolute(desn).max()
+        try:
+            max = np.absolute(desn).max()
+        except Exception as e:
+            print('AAA')
         writter.write(struct.pack('d', max))
         norm = _normalize(desn, max, saveType)
         for i in range(0, len(norm)):

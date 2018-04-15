@@ -1,3 +1,9 @@
+def getNumeroDCT():
+    return 99
+
+def matchNumeroDCT(numeroDCT):
+    return numeroDCT == 99
+
 def calculaBase(amostrasPorQuadro):
     return 2
 
