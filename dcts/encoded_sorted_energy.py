@@ -16,9 +16,9 @@ class Quadro:
         return quadro
     
     @classmethod
-    def fromReader(cls, reader):
+    def fromReader(cls, amostrasPorQuadro, amostrasMantidasPorQuadro, reader):
         quadro = cls()
-        quadro.dados = quadro.__readCoefs(reader)
+        quadro.dados = quadro.__readCoefs(amostrasPorQuadro, amostrasMantidasPorQuadro, reader)
         return quadro
     
     def getCoefs(self, porcentagemDescarte):
@@ -48,7 +48,6 @@ class Quadro:
         return ret
 
     def write(self, writer, porcentagemDescarte):
-        writer.write(struct.pack('H', len(self.dados)))
         coefsCompressed, idxsCompressed = self.__comprimir(self.dados, porcentagemDescarte)
         self.__writeNormalizedArray(writer, coefsCompressed)
             
@@ -67,36 +66,31 @@ class Quadro:
         writer.write(struct.pack('d', max))
 
     def __writeArray(self, writer, array, pack = savePack):
-        size = len(array)
-        writer.write(struct.pack('H', size))
         for element in array:
             writer.write(struct.pack(pack, element))
 
-    def __readCoefs(self, reader):
-        size =  struct.unpack('H', reader.read(struct.calcsize('H')))[0]
-        coefsCompressed = self.__readNormalizedArray(reader)
+    def __readCoefs(self, amostrasPorQuadro, amostrasMantidasPorQuadro, reader):
+        coefsCompressed = self.__readNormalizedArray(amostrasMantidasPorQuadro, reader)
 
         idxPack = struct.unpack('c', reader.read(struct.calcsize('c')))[0].decode()
     
-        idxsCompressed = self.__readArray(reader, idxPack).astype('int16')
+        idxsCompressed = self.__readArray(amostrasMantidasPorQuadro, reader, idxPack).astype('int16')
         
-        coefs = self.__zerarCoefsComprimido(size, coefsCompressed, idxsCompressed)
+        coefs = self.__zerarCoefsComprimido(amostrasPorQuadro, coefsCompressed, idxsCompressed)
         return coefs
 
     
-    def __readNormalizedArray(self, reader):
-        ret = self.__readArray(reader)
+    def __readNormalizedArray(self, tamanhoArray, reader):
+        ret = self.__readArray(tamanhoArray, reader)
         buffHeader = reader.read(struct.calcsize('d'))
         max = struct.unpack('d', buffHeader)[0]
         return _desnormalize(np.array(ret), max)
     
-    def __readArray(self, reader, pack = savePack):
-        buffHeader = reader.read(struct.calcsize('H'))
-        size = struct.unpack('H', buffHeader)[0]
+    def __readArray(self, tamanhoArray, reader, pack = savePack):
         packSize = struct.calcsize(pack)
-        buffData = reader.read(packSize * size)
-        ret = np.empty(size)
-        for i in range(size):
+        buffData = reader.read(packSize * tamanhoArray)
+        ret = np.empty(tamanhoArray)
+        for i in range(tamanhoArray):
             ret[i] = struct.unpack_from(pack, buffData, offset=(i * packSize))[0]
         return ret
         
@@ -135,23 +129,26 @@ class WaveEncoded:
     @classmethod
     def fromFile(cls, filename):
         with open(filename, 'rb') as reader:
-            size = struct.calcsize('IIIIBB')
+            size = struct.calcsize('IIIHBB')
             buff = reader.read(size)
-            (fs, totalAmostras, amostrasPorQuadro, qtdQuadros, mode, sobreposicao) = struct.unpack('IIIIBB', buff)
+            (fs, totalAmostras, amostrasPorQuadro, amostrasMantidasPorQuadro, mode, sobreposicao) = struct.unpack('IIIHBB', buff)
             encoded  = cls.fromEncoded(fs, totalAmostras, amostrasPorQuadro, mode, sobreposicao)
-            encoded.__readQuadros(qtdQuadros, reader)
+            qtdQuadros = math.ceil(totalAmostras / amostrasPorQuadro)
+            encoded.__readQuadros(qtdQuadros, amostrasMantidasPorQuadro, reader)
         return encoded
 
-    def __readQuadros(self, qtdQuadros, reader):
+    def __readQuadros(self, qtdQuadros, amostrasMantidasPorQuadro, reader):
         for i in range(0,qtdQuadros):
-            self.quadros.append(Quadro.fromReader(reader))
+            self.quadros.append(Quadro.fromReader(self.amostrasPorQuadro, amostrasMantidasPorQuadro, reader))
 
     def addQuadro(self, dadosQuadro):
         self.quadros.append(Quadro.fromEncode(dadosQuadro))
 
     def __writeHeader(self, writer):
-        writer.write(struct.pack('IIIIBB',
-            self.fs, self.totalAmostras, self.amostrasPorQuadro, len(self.quadros),
+        amostrasDescartadas = round(self.amostrasPorQuadro * self.porcentagemDescarte)
+        amostrasMantidasPorQuadro = self.amostrasPorQuadro - amostrasDescartadas
+        writer.write(struct.pack('IIIHBB',
+            self.fs, self.totalAmostras, self.amostrasPorQuadro, amostrasMantidasPorQuadro,
             self.mode, self.sobreposicao))
 
     def __writeData(self, writer):
