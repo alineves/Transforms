@@ -2,12 +2,25 @@ import pywt
 import math
 import numpy as np
 import dwt.encoded_sorted_energy as enc
+import dwt.encoded as encoded_remover_cd
+
+def criarWaveEncoded(fs, totalAmostras, amostrasPorQuadro, mode, level, sobreposicao):
+    return encoded_remover_cd.WaveEncoded.fromEncoded(fs, totalAmostras, amostrasPorQuadro, encoded_remover_cd.Mode.fromString(mode), level, sobreposicao)
+
+def criarWaveEncodedSortedEnergy(fs, totalAmostras, amostrasPorQuadro, mode, level, sobreposicao):
+    return enc.WaveEncoded.fromEncoded(fs, totalAmostras, amostrasPorQuadro, enc.Mode.fromString(mode), level, sobreposicao)
+
+def encodeRemoveCD(dados, fs, tempoQuadro, mode, level, sobreposicao = 0):
+    return __encode(dados, fs, tempoQuadro, mode, level, criarWaveEncoded, sobreposicao)
 
 def encode(dados, fs, tempoQuadro, mode, level, sobreposicao = 0):
+    return __encode(dados, fs, tempoQuadro, mode, level, criarWaveEncodedSortedEnergy, sobreposicao)
+
+def __encode(dados, fs, tempoQuadro, mode, level, criarWaveEncodedFunc, sobreposicao = 0):
     totalAmostras = len(dados)
     amostrasPorQuadro = int(fs * tempoQuadro)
 
-    ret = enc.WaveEncoded.fromEncoded(fs, totalAmostras, amostrasPorQuadro, enc.Mode.fromString(mode), level, sobreposicao)
+    ret = criarWaveEncodedFunc(fs, totalAmostras, amostrasPorQuadro, mode, level, sobreposicao)
     for i in range(0, totalAmostras - sobreposicao, amostrasPorQuadro - sobreposicao):
         quadro = _extrairQuadro(dados, i, amostrasPorQuadro)
         result = pywt.wavedec(quadro, mode, level=level)
