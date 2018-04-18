@@ -177,13 +177,17 @@ class Quadro:
         return quadro
     
     @classmethod
-    def fromReader(cls, reader):
+    def fromReader(cls, cdsRemovidos, reader):
         quadro = cls()
         quadro.cds = []
         qtdCds = struct.unpack('B', reader.read(struct.calcsize('B')))[0]
         quadro.__readCA(reader)
         for i in range(0, qtdCds):
-            quadro.cds.append(quadro.__readArray(reader))
+            if (i in cdsRemovidos):
+                cd = quadro.__readZeroArray(reader)
+            else:
+                cd = quadro.__readArray(reader)
+            quadro.cds.append(cd)
         return quadro
     
     def getCDs(self, cdsRemovidos):
@@ -197,14 +201,18 @@ class Quadro:
                 ret.append(cd)
         return ret
     
-    def write(self, writer):
+    def write(self, cdsRemovidos,  writer):
         self.__writeHeader(writer)
-        self.__writeData(writer)
+        self.__writeData(cdsRemovidos, writer)
 
-    def __writeData(self, writer):
+    def __writeData(self, cdsRemovidos, writer):
         self.__writeArray(writer, self.ca)
-        for i in range(0, len(self.cds)):
-            self.__writeArray(writer, self.cds[i])
+        for i in range(len(self.cds)):
+            cd = self.cds[i]
+            if (i not in cdsRemovidos):
+                self.__writeArray(writer, cd)
+            else:
+                writer.write(struct.pack('H', len(cd)))
     
     def __writeArray(self, writer, array):
         max = np.absolute(array).max()
@@ -219,14 +227,22 @@ class Quadro:
     def __readCA(self, reader):
         self.ca = self.__readArray(reader)
     
+    def __readZeroArray(self, reader):
+        buffHeader = reader.read(struct.calcsize('H'))
+        size = struct.unpack('H', buffHeader)[0]
+        return np.zeros(size)
+
     def __readArray(self, reader):
         buffHeader = reader.read(struct.calcsize('Hd'))
         (size, max) = struct.unpack('Hd', buffHeader)
-        buffData = reader.read(struct.calcsize(savePack) * size)
-        ret = np.empty(size)
         esize = struct.calcsize(savePack)
-        for i in range(0, size):
-            ret[i] = struct.unpack_from(savePack, buffData, offset=(i * esize))[0]
+        buffData = reader.read(esize * size)
+        ret = np.empty(size)
+        for i in range(size):
+            try:
+                ret[i] = struct.unpack_from(savePack, buffData, offset=(i * esize))[0]
+            except Exception as ex:
+                print('aaa')
         return _desnormalize(np.array(ret), max)
 
 class WaveEncoded:
@@ -275,12 +291,12 @@ class WaveEncoded:
         self.cdsRemovidos = set([])
         buffer = reader.read(cdsRemovidosSize * bsize)
         for i in range(cdsRemovidosSize):
-            cdRemovido = struct.unpack_from('B', buffer, offset=(i * cdsRemovidosSize))
+            cdRemovido = struct.unpack_from('B', buffer, offset=(i * bsize))[0]
             self.cdsRemovidos.add(cdRemovido)
 
     def __readQuadros(self, qtdQuadros, reader):
         for i in range(0,qtdQuadros):
-            self.quadros.append(Quadro.fromReader(reader))
+            self.quadros.append(Quadro.fromReader(self.cdsRemovidos, reader))
 
     def addQuadro(self, dadosQuadro):
         self.quadros.append(Quadro.fromEncode(dadosQuadro))
@@ -299,7 +315,7 @@ class WaveEncoded:
     def __writeData(self, writer):
         for i in range(0, len(self.quadros)):
             quadro = self.quadros[i]
-            quadro.write(writer)
+            quadro.write(self.cdsRemovidos, writer)
 
     def saveToFile(self, filename):
         with open(filename, 'wb') as f:
