@@ -7,25 +7,25 @@ import time
 def current_milli_time():
     return int(round(time.time() * 1000))
 
-fs, audData = wv.open_wave("./waves/f0001038.8k.WAV")
+fs, audData = wv.open_wave("./waves/m0003018.WAV")
 
 b = current_milli_time()
-encoded = codec.encode(audData, fs, 2, 'db12', 9, sobreposicao=0)
+encoded = codec.encode(audData, fs, 0.05, 'db5', 5, sobreposicao=100)
 a = current_milli_time()
 print('Tempo de encode: ', a - b)
 print("quantidadeQuadros", encoded.quantidadeQuadros())
-encoded.setPorcentagemDescarte(0.85)
+encoded.setPorcentagemDescarte(0.5)
 
 b = current_milli_time()
 rest = codec.decode(encoded)
 a = current_milli_time()
 print('Tempo de decode: ', a - b)
 
-encoded.saveToFile('./result/f0001038.dwt')
+encoded.saveToFile('./result/m0003018.dwt')
 
-wv.save_wave("./result/f0001038.8k.db12.dec9.remove85percent.s0.wav", fs, rest, 16)
+wv.save_wave("./result/m0003018.22k.f2.q005s.db5.dec5.remove50percent.s100.wav", fs, rest, 16)
 
-newEncoded = enc.WaveEncoded.fromFile('./result/f0001038.dwt')
+newEncoded = enc.WaveEncoded.fromFile('./result/m0003018.dwt')
 # rest = codec.decode(newEncoded)
 # wv.save_wave("./result/m0003022.db1.2.wav", fs, rest, 16)
 

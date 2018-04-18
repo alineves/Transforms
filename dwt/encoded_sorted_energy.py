@@ -171,64 +171,64 @@ class Quadro:
     @classmethod
     def fromEncode(cls, dadosQuadro):
         quadro = cls()
-        quadro.cds = []
-        quadro.ca = dadosQuadro[0]
-        for i in range(1, len(dadosQuadro)): 
-            quadro.cds.append(dadosQuadro[i])
+        quadro.coefs = []
+        for i in range(0, len(dadosQuadro)): 
+            quadro.coefs.append(dadosQuadro[i])
         return quadro
     
     @classmethod
     def fromReader(cls, reader):
         quadro = cls()
-        quadro.cds = []
-        quadro.__readCA(reader)
-        quadro.__readCDs(reader)
+        quadro.coefs = []
+        quadro.__readCoefs(reader)
         return quadro
     
-    def getCDs(self, porcentagemDescarte):
+    def getCoefs(self, porcentagemDescarte):
         ret = []
-        for cd in self.cds:
-            cdCompressed, idxsCompressed = self.__comprimir(cd, porcentagemDescarte)
-            cdFinal = self.__zerarCdComprimido(len(cd), cdCompressed, idxsCompressed)
-            ret.append(cdFinal)
+        for coef in self.coefs:
+            coefCompressed, idxsCompressed = self.__comprimir(coef, porcentagemDescarte)
+            coefFinal = self.__zerarComprimido(len(coef), coefCompressed, idxsCompressed)
+            ret.append(coefFinal)
         return ret
     
-    def __comprimir(self, cd, porcentagemDescarte):
-        size = len(cd)
-        idxs = np.argsort(np.absolute(cd))[::-1]
+    def __comprimir(self, coef, porcentagemDescarte):
+        size = len(coef)
+        idxs = np.argsort(np.absolute(coef))[::-1]
         compressedLen = round(size * (1 - porcentagemDescarte))
 
         idxsCompressed = np.resize(idxs, compressedLen)
-        cdCompressed = np.empty(compressedLen) 
+        coefCompressed = np.empty(compressedLen) 
         for i in range(0, compressedLen):
             idx = idxsCompressed[i]
-            cdCompressed[i] = cd[idx]
+            coefCompressed[i] = coef[idx]
 
-        return cdCompressed, idxsCompressed
+        return coefCompressed, idxsCompressed
     
-    def __zerarCdComprimido(self, sizeCD, cdCompressed, idxsCompressed):
-        ret = np.zeros(sizeCD)
-        for i in range(len(cdCompressed)):
-            valor = cdCompressed[i]
+    def __zerarComprimido(self, size, coefCompressed, idxsCompressed):
+        ret = np.zeros(size)
+        for i in range(len(coefCompressed)):
+            valor = coefCompressed[i]
             idx = idxsCompressed[i]
             ret[idx] = valor
         return ret
 
     def write(self, writer, porcentagemDescarte):
-        self.__writeNormalizedArray(writer, self.ca)
-        writer.write(struct.pack('B', len(self.cds)))
-        for cd in self.cds:
-            writer.write(struct.pack('H', len(cd)))
-            cdCompressed, idxsCompressed = self.__comprimir(cd, porcentagemDescarte)
-            self.__writeNormalizedArray(writer, cdCompressed)
-            
-            if (idxsCompressed.max() > 255):
-                pack = "H"
-            else:
-                pack = "B"
+        writer.write(struct.pack('B', len(self.coefs)))
+        for coef in self.coefs:
+            self.__writeComprimido(writer, coef, porcentagemDescarte)
 
-            writer.write(struct.pack("c", pack.encode()))
-            self.__writeArray(writer, idxsCompressed, pack)
+    def __writeComprimido(self, writer, array, porcentagemDescarte):
+        writer.write(struct.pack('H', len(array)))
+        arrayCompressed, idxsCompressed = self.__comprimir(array, porcentagemDescarte)
+        self.__writeNormalizedArray(writer, arrayCompressed)
+        
+        if (idxsCompressed.max() > 255):
+            pack = "H"
+        else:
+            pack = "B"
+
+        writer.write(struct.pack("c", pack.encode()))
+        self.__writeArray(writer, idxsCompressed, pack)
     
     def __writeNormalizedArray(self, writer, array):
         max = np.absolute(array).max()
@@ -241,18 +241,15 @@ class Quadro:
         for i in range(0, len(array)):
             writer.write(struct.pack(pack, array[i]))
     
-    def __readCDs(self, reader):
-        qtdCds = struct.unpack('B', reader.read(struct.calcsize('B')))[0]
-        for i in range(0, qtdCds):
-            sizeCD = struct.unpack('H', reader.read(struct.calcsize('H')))[0]
-            cdCompressed = self.__readNormalizedArray(reader)
+    def __readCoefs(self, reader):
+        qtdCoefs = struct.unpack('B', reader.read(struct.calcsize('B')))[0]
+        for i in range(0, qtdCoefs):
+            size = struct.unpack('H', reader.read(struct.calcsize('H')))[0]
+            coefCompressed = self.__readNormalizedArray(reader)
             idxPack = struct.unpack('c', reader.read(struct.calcsize('c')))[0].decode()
             idxsCompressed = self.__readArray(reader, idxPack).astype('int16')
-            cd = self.__zerarCdComprimido(sizeCD, cdCompressed, idxsCompressed)
-            self.cds.append(cd)    
-
-    def __readCA(self, reader):
-        self.ca = self.__readNormalizedArray(reader)
+            coef = self.__zerarComprimido(size, coefCompressed, idxsCompressed)
+            self.coefs.append(coef)
     
     def __readNormalizedArray(self, reader):
         ret = self.__readArray(reader)
@@ -294,9 +291,7 @@ class WaveEncoded:
 
     def dadosQuadro(self, idxQuadro):
         quadro = self.quadros[idxQuadro]
-        ret = [quadro.ca]
-        ret.extend(quadro.getCDs(self.porcentagemDescarte))
-        return ret
+        return quadro.getCoefs(self.porcentagemDescarte)
 
     @classmethod
     def fromFile(cls, filename):

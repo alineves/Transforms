@@ -16,8 +16,12 @@ def encode(dados, fs, tempoQuadro, mode, level, sobreposicao = 0):
 
 def decode(encoded):
     if (encoded.sobreposicao > 0):
-        return __decodeSobreposto(encoded)
-    return __decodeNormal(encoded)
+        ret = __decodeSobreposto(encoded)
+    else:
+        ret = __decodeNormal(encoded)
+    totalAmostras = encoded.totalAmostras
+    return np.resize(ret, totalAmostras)
+    
 
 def __decodeNormal(encoded):
     ret = np.empty(0)
@@ -26,8 +30,7 @@ def __decodeNormal(encoded):
         dadosQuadro = pywt.waverec(coeffs, encoded.mode.toString())
         ret = np.append(ret, dadosQuadro)
 
-    totalAmostras = encoded.totalAmostras
-    return np.resize(ret, totalAmostras)
+    return ret
 
 
 def __decodeSobreposto(encoded):
