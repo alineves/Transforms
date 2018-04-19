@@ -19,7 +19,7 @@ def current_milli_time():
 fs, audData = wv.open_wave("./waves/f0001038.16k.WAV")
 
 b = current_milli_time()
-encoded = codec.encodeEnergy(audData, fs, 0.02, dct1, sobreposicao=20)
+encoded = codec.encodeEnergy(audData, fs, 0.02, dct2, sobreposicao=50)
 a = current_milli_time()
 print('Tempo de encode: ', a - b)
 
@@ -30,11 +30,11 @@ rest = codec.decodeEnergy(encoded)
 a = current_milli_time()
 print('Tempo de decode: ', a - b)
 
-encoded.saveToFile("./result/f0001038.16k.sorted.q20ms.remove85percent.s20.dct1")
+encoded.saveToFile("./result/f0001038.16k.q20ms.remove85percent.s50.dct2")
 
-wv.save_wave("./result/f0001038.16k.dct1.q20ms.remove85percent.s20.wav", fs, rest, 16)
+wv.save_wave("./result/f0001038.16k.dct2.q20ms.remove85percent.s50.wav", fs, rest, 16)
 
-newEncoded = enc.WaveEncoded.fromFile("./result/f0001038.16k.sorted.q20ms.remove85percent.s20.dct1")
+#newEncoded = enc.WaveEncoded.fromFile("./result/f0001038.16k.sorted.q20ms.remove85percent.s50.teste3.dct2")
 
-newdecoded = codec.decodeEnergy(newEncoded)
-wv.save_wave("./result/f0001038.16k.dct1.q20ms.remove85percent.s20.ff.wav", fs, newdecoded, 16)
+#newdecoded = codec.decodeEnergy(newEncoded)
+#wv.save_wave("./result/f0001038.16k.dct2.q20ms.remove85percent.s50.ff.teste.wav", fs, newdecoded, 16)
