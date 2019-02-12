@@ -3,30 +3,41 @@ import dwt.codec as codec
 import dwt.encoded_sorted_energy as enc
 import numpy as np
 import time
+import os
+from shutil import copyfile
 
 def current_milli_time():
     return int(round(time.time() * 1000))
 
-fs, audData = wv.open_wave("./waves/f0001038.16k.WAV")
+prefixoNome = "f0001038.16k.q20ms.db10.dec3.sorted50.s0"
+os.makedirs('./result/' + prefixoNome)
+origem = "f0001038.16k.WAV"
+copyfile("./waves/" + origem, "./result/%s/%s" % (prefixoNome, origem))
+
+fs, audData = wv.open_wave("./waves/" + origem)
 
 b = current_milli_time()
-encoded = codec.encode(audData, fs, 1, 'db10', 9, sobreposicao=0)
+encoded = codec.encode(audData, fs, 0.02, 'db10', 3, sobreposicao=0)
 a = current_milli_time()
 print('Tempo de encode: ', a - b)
 print("quantidadeQuadros", encoded.quantidadeQuadros())
-encoded.setPorcentagemDescarte(0.85)
+encoded.setPorcentagemDescarte(0.5)
 
 b = current_milli_time()
 rest = codec.decode(encoded)
 a = current_milli_time()
 print('Tempo de decode: ', a - b)
 
-encoded.saveToFile('./result/f0001038.16k.q1s.db10.dec9.remove85percent.s0.dwt')
+#Arquivo comprimido
+encoded.saveToFile("./result/%s/encoded.dwt" % prefixoNome)
 
-wv.save_wave("./result/f0001038.16k.q1s.db10.dec9.remove85percent.s0.wav", fs, rest, 16)
+#Arquivo recuperado
+wv.save_wave("./result/%s/recuperado-memoria.wav" % prefixoNome, fs, rest, 16)
 
-#newEncoded = enc.WaveEncoded.fromFile('./result/f0001038.16k..f2.q900ms.db10.dec9.remove85percent.s0.dwt')
-# rest = codec.decode(newEncoded)
-# wv.save_wave("./result/m0003022.db1.2.wav", fs, rest, 16)
+#Recuperando dados comprimidos a partir do arquivo salvo
+newEncoded = enc.WaveEncoded.fromFile("./result/%s/encoded.dwt" % prefixoNome)
+#Recuperando amostras a partir dos dados comprimidos restaurados do arquivo
+restarquivo = codec.decode(newEncoded)
 
-#print("AAA ", newEncoded)
+#Arquivo recuperado sobre newEncoded
+wv.save_wave("./result/%s/recuperado-arquivo.wav" % prefixoNome, fs, restarquivo, 16)

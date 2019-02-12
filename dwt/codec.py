@@ -18,12 +18,20 @@ def encode(dados, fs, tempoQuadro, mode, level, sobreposicao = 0):
 
 def __encode(dados, fs, tempoQuadro, mode, level, criarWaveEncodedFunc, sobreposicao = 0):
     totalAmostras = len(dados)
+    
+    #calcula quantidade de amostras por quadro
     amostrasPorQuadro = int(fs * tempoQuadro)
 
+    #cria objeto de retorno com dados necessario para futuro decode
     ret = criarWaveEncodedFunc(fs, totalAmostras, amostrasPorQuadro, mode, level, sobreposicao)
+
+    # Percorre quadro a quadro, considerando sobreposicao
     for i in range(0, totalAmostras - sobreposicao, amostrasPorQuadro - sobreposicao):
+        #obtem o qadro
         quadro = _extrairQuadro(dados, i, amostrasPorQuadro)
+        #encoda o quadro
         result = pywt.wavedec(quadro, mode, level=level)
+        #adiona resultado ao objeto de retorno
         ret.addQuadro(result)
     return ret
 

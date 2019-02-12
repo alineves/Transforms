@@ -4,11 +4,6 @@ import dwt.encoded_sorted_energy as enc
 import numpy as np
 import time
 
-codec.addAlg(dct1)
-codec.addAlg(dct2)
-codec.addAlg(dct3)
-codec.addAlg(dct4)
-
 def current_milli_time():
     return int(round(time.time() * 1000))
 
