@@ -49,10 +49,11 @@ def _decodeSobreposto(dados, amostrasPorQuadro, funcCalc, funcBase, sobreposicao
     
 def _encodeSobreposto(dados, amostrasPorQuadro, funcCalc, funcBase, sobreposicao):
     totalAmostras = len(dados)
+    final = math.ceil(totalAmostras / amostrasPorQuadro) * amostrasPorQuadro
     base = funcBase(amostrasPorQuadro)
 
     ret = np.array([])
-    for i in range(0, totalAmostras - sobreposicao, (amostrasPorQuadro - sobreposicao)):
+    for i in range(0, final, (amostrasPorQuadro - sobreposicao)):
         quadro = _extrairQuadro(dados, i, amostrasPorQuadro)
         result = funcCalc(quadro, base)
         ret = np.append(ret, result[0: amostrasPorQuadro])
