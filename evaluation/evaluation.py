@@ -1,10 +1,29 @@
+import dcts.wave as wv
 import numpy as np
 import math
 
-def evaluate_snr_seg(ref, test, amostrasPorQuadro, sobreposicao):
+def evaluate(ref, test, saida):
+    fsRef, ref = wv.open_wave(ref)
+    fsTest, test = wv.open_wave(test)
+    amostrasPorQuadro = int(fsRef * 0.02)
+
+    srn_seg = evaluate_snr_seg(ref, test, int(fsRef * 0.02))
+    snr_total = evaluate_snr_total(ref, test)
+
+    file = open(saida,"w") 
+    file.write("snr_seg,snr_total")
+    file.write("\n") 
+    file.write("%f,%f\n" % (srn_seg, snr_total))
+    file.close() 
+
+    print(srn_seg)
+    print(snr_total)
+
+
+def evaluate_snr_seg(ref, test, amostrasPorQuadro):
     totalAmostras = len(ref)
     snrs = np.array([])
-    for i in range(0, totalAmostras, amostrasPorQuadro - sobreposicao):
+    for i in range(0, totalAmostras, amostrasPorQuadro):
         quadroRef = _extrairQuadro(ref, i, amostrasPorQuadro)
         quadroTest = _extrairQuadro(test, i, amostrasPorQuadro)
         

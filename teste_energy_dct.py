@@ -15,7 +15,7 @@ codec.addAlg(dct2)
 codec.addAlg(dct3)
 codec.addAlg(dct4)
 
-prefixoNome = "f0001038.16k.q20ms.dct2.sorted0.s0"
+prefixoNome = "f0001038.16k.q20ms.dct2.sorted50.s160"
 os.makedirs('./result/' + prefixoNome)
 origem = "f0001038.16k.WAV"
 copyfile("./waves/" + origem, "./result/%s/%s" % (prefixoNome, origem))
@@ -26,11 +26,11 @@ def current_milli_time():
 fs, audData = wv.open_wave("./waves/" + origem)
 
 b = current_milli_time()
-encoded = codec.encodeEnergy(audData, fs, 0.02, dct2, sobreposicao=0)
+encoded = codec.encodeEnergy(audData, fs, 0.02, dct2, sobreposicao=160)
 a = current_milli_time()
 print('Tempo de encode: ', a - b)
 
-encoded.setPorcentagemDescarte(0)
+encoded.setPorcentagemDescarte(0.5)
 
 b = current_milli_time()
 rest = codec.decodeEnergy(encoded)
@@ -38,13 +38,13 @@ a = current_milli_time()
 print('Tempo de decode: ', a - b)
 
 #Arquivo comprimido
-encoded.saveToFile("./result/%s/encoded.dwt" % prefixoNome)
+encoded.saveToFile("./result/%s/encoded.dct" % prefixoNome)
 
 #Arquivo recuperado
 wv.save_wave("./result/%s/recuperado-memoria.wav" % prefixoNome, fs, rest, 16)
 
 #Recuperando dados comprimidos a partir do arquivo salvo
-newEncoded = enc.WaveEncoded.fromFile("./result/%s/encoded.dwt" % prefixoNome)
+newEncoded = enc.WaveEncoded.fromFile("./result/%s/encoded.dct" % prefixoNome)
 #Recuperando amostras a partir dos dados comprimidos restaurados do arquivo
 restarquivo = codec.decodeEnergy (newEncoded)
 

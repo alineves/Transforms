@@ -8,12 +8,13 @@ import dcts.dct3 as dct3
 import dcts.dct4 as dct4
 import time
 import os
+import evaluation.evaluation as eval
 from shutil import copyfile
 
 def current_milli_time():
     return int(round(time.time() * 1000))
 
-prefixoNome = "f0001038.16k.q20ms.dct2.descarta160.s160"
+prefixoNome = "f0001038.16k.q20ms.dct2.descarta160.s0-2"
 os.makedirs('./result/' + prefixoNome)
 origem = "f0001038.16k.WAV"
 copyfile("./waves/" + origem, "./result/%s/%s" % (prefixoNome, origem))
@@ -21,7 +22,7 @@ copyfile("./waves/" + origem, "./result/%s/%s" % (prefixoNome, origem))
 fs, audData = wv.open_wave("./waves/f0001038.16k.WAV")
 
 b = current_milli_time()
-encoded = codec.encode(audData, fs, 0.02, dct2, 160)
+encoded = codec.encode(audData, fs, 0.02, dct2, 0)
 a = current_milli_time()
 print('Tempo de encode: ', a - b)
 
@@ -44,3 +45,5 @@ newdecoded = codec.decodeFromEncoded(newEncoded, dct2)
 
 #Arquivo recuperado sobre newEncoded
 wv.save_wave("./result/%s/recuperado-arquivo.wav" % prefixoNome, fs, newdecoded, 16)
+
+eval.evaluate("./waves/" + origem, "./result/%s/recuperado-memoria.wav" % prefixoNome, "./result/%s/medidas.txt" % prefixoNome)
